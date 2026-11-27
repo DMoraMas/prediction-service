@@ -23,6 +23,11 @@ async function initModel() {
   console.log("Modelo ONNX cargado correctamente");
 }
 
+// Indica si el modelo está cargado
+function isReady() {
+  return session !== undefined;
+}
+
 // Obtener nombres de las características
 function getFeatures() {
   return norm.features;
@@ -68,6 +73,7 @@ async function predict(features) {
 
 module.exports = {
   initModel,
+  isReady,
   getFeatures,
   predict
 };
