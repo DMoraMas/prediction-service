@@ -1,4 +1,5 @@
 const predictionService = require("../services/prediction.service");
+const Prediction = require("../models/prediction.model");
 
 // Comprobar que el servicio está levantado
 function health(req, res) {
@@ -30,13 +31,31 @@ function getFeatures(req, res) {
 // Procesar petición de predicción
 async function predict(req, res) {
   try {
-    const { features } = req.body || {};
+    const inicio = Date.now();
+    const { features, meta } = req.body || {};
 
+    // Ejecutar el modelo
     const prediccion =
       await predictionService.predict(features);
 
-    res.json({
-      prediction: prediccion
+    const latencyMs = Date.now() - inicio;
+
+    // Guardar la predicción en MongoDB
+    const guardada = await Prediction.create({
+      features,
+      prediction: prediccion,
+      dataId: meta?.dataId,
+      source: meta?.source,
+      correlationId: meta?.correlationId,
+      latencyMs
+    });
+
+    // Responder según el contrato (201 Created)
+    res.status(201).json({
+      predictionId: guardada._id,
+      prediction: prediccion,
+      timestamp: guardada.timestamp,
+      latencyMs
     });
   } catch (error) {
     console.error(error);
